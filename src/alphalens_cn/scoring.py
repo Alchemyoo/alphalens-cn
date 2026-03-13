@@ -65,6 +65,19 @@ def score_candidate(row: dict, hot_concepts: list[str] | None = None) -> dict:
 
 def select_top3(limitup_rows: list[dict], hot_concepts: list[str] | None = None) -> list[dict]:
     scored = [score_candidate(row, hot_concepts=hot_concepts) for row in limitup_rows]
-    filtered = [x for x in scored if x['score'] >= 70 and x['theme_score'] >= 10 and x['structure_score'] >= 10]
-    filtered.sort(key=lambda x: (x['score'], x['board'], x['turnover_yi']), reverse=True)
-    return filtered[:3]
+    scored.sort(key=lambda x: (x['score'], x['board'], x['turnover_yi']), reverse=True)
+
+    primary = [x for x in scored if x['score'] >= 60 and x['theme_score'] >= 10 and x['structure_score'] >= 5]
+    if len(primary) >= 3:
+        return primary[:3]
+
+    seen = {(x['code'], x['name']) for x in primary}
+    fallback = []
+    for item in scored:
+        key = (item['code'], item['name'])
+        if key in seen:
+            continue
+        fallback.append(item)
+        if len(primary) + len(fallback) >= 3:
+            break
+    return (primary + fallback)[:3]
