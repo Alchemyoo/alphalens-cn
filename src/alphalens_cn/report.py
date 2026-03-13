@@ -4,6 +4,10 @@ from .models import MarketSummary
 def render_markdown(summary: MarketSummary) -> str:
     concept_text = "、".join(summary.hot_concepts) if summary.hot_concepts else "无"
     watchlist_text = "\n".join(f"- {item}" for item in summary.watchlist) if summary.watchlist else "- 无"
+    candidate_text = "\n".join(
+        f"- {c.name}({c.code}) | {c.industry} | {c.board}板 | {c.turnover_yi:.2f}亿 | {c.score}分"
+        for c in summary.candidates
+    ) if summary.candidates else "- 无"
     breadth_ratio = round(summary.advancers / max(summary.decliners, 1), 2)
 
     return f"""# AlphaLens CN 日报 - {summary.date}
@@ -26,6 +30,9 @@ def render_markdown(summary: MarketSummary) -> str:
 
 ## 次日观察
 {watchlist_text}
+
+## 明日3股候选榜
+{candidate_text}
 
 ## 数据来源
 - provider：{summary.provider}

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import List
 
-from .models import MarketSummary
+from .models import Candidate, MarketSummary
 from .mock_data import get_mock_summary
+from .scoring import select_top3
 
 
 class AKShareProvider:
@@ -59,6 +60,27 @@ class AKShareProvider:
             if not watchlist:
                 watchlist = ["高辨识度核心股", "分歧转一致首板", "机构关注方向"]
 
+            candidate_rows = []
+            try:
+                if fetcher.ak:
+                    zt_df = fetcher.ak.stock_zt_pool_em(date=date.replace('-', ''))
+                    if not zt_df.empty:
+                        candidate_rows = zt_df.to_dict(orient='records')
+            except Exception:
+                candidate_rows = []
+            top3 = select_top3(candidate_rows, hot_concepts=hot_concepts)
+            candidates = [
+                Candidate(
+                    name=x['name'],
+                    code=x['code'],
+                    industry=x.get('industry', ''),
+                    board=int(x.get('board', 0)),
+                    score=int(x.get('score', 0)),
+                    turnover_yi=float(x.get('turnover_yi', 0.0)),
+                )
+                for x in top3
+            ]
+
             note_parts = [market.get("note"), sentiment.get("note"), limitup.get("note"), concepts.get("note")]
             note = " | ".join([x for x in note_parts if x])
 
@@ -75,6 +97,7 @@ class AKShareProvider:
                 limit_down_count=int(sentiment.get("limit_down_count") or 0),
                 hot_concepts=hot_concepts,
                 watchlist=watchlist,
+                candidates=candidates,
                 provider="akshare",
                 note=note,
             )
