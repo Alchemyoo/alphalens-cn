@@ -41,3 +41,24 @@ def get_board_concept(limit=20):
     ak = _ensure_akshare()
     df = ak.stock_board_concept_name_em()
     return df.head(limit).to_dict(orient='records')
+
+
+def get_financial_abstract(symbol: str, limit=20):
+    ak = _ensure_akshare()
+    df = ak.stock_financial_abstract_ths(symbol=symbol, indicator='按报告期')
+    return df.head(limit).to_dict(orient='records')
+
+
+def get_fund_flow(symbol: str, market='auto', limit=20):
+    ak = _ensure_akshare()
+    if market == 'auto':
+        market = 'sh' if str(symbol).startswith('6') else 'sz'
+    df = ak.stock_individual_fund_flow(stock=symbol, market=market)
+    return df.head(limit).to_dict(orient='records')
+
+
+def get_lhb(date: str, limit=20):
+    ak = _ensure_akshare()
+    trade_date = date.replace('-', '')
+    df = ak.stock_lhb_detail_em(start_date=trade_date, end_date=trade_date)
+    return df.head(limit).to_dict(orient='records')

@@ -5,7 +5,10 @@ from .exporters import write_text
 from .market_tools import (
     get_board_concept,
     get_board_industry,
+    get_financial_abstract,
+    get_fund_flow,
     get_historical_kline,
+    get_lhb,
     get_realtime_quotes,
     search_stock,
 )
@@ -59,6 +62,18 @@ def cmd_concept(args: argparse.Namespace) -> int:
     return _run_json_command(get_board_concept, limit=args.limit)
 
 
+def cmd_financial(args: argparse.Namespace) -> int:
+    return _run_json_command(get_financial_abstract, args.symbol, limit=args.limit)
+
+
+def cmd_flow(args: argparse.Namespace) -> int:
+    return _run_json_command(get_fund_flow, args.symbol, market=args.market, limit=args.limit)
+
+
+def cmd_lhb(args: argparse.Namespace) -> int:
+    return _run_json_command(get_lhb, args.date, limit=args.limit)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="alphalens-cn")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -92,6 +107,22 @@ def build_parser() -> argparse.ArgumentParser:
     concept = sub.add_parser("concept", help="Get concept board snapshot")
     concept.add_argument("--limit", type=int, default=20)
     concept.set_defaults(func=cmd_concept)
+
+    financial = sub.add_parser("financial", help="Get financial abstract")
+    financial.add_argument("--symbol", required=True)
+    financial.add_argument("--limit", type=int, default=20)
+    financial.set_defaults(func=cmd_financial)
+
+    flow = sub.add_parser("flow", help="Get individual fund flow")
+    flow.add_argument("--symbol", required=True)
+    flow.add_argument("--market", default="auto", choices=["auto", "sh", "sz"])
+    flow.add_argument("--limit", type=int, default=20)
+    flow.set_defaults(func=cmd_flow)
+
+    lhb = sub.add_parser("lhb", help="Get dragon-tiger list details")
+    lhb.add_argument("--date", required=True, help="Trading date, e.g. 2026-03-13")
+    lhb.add_argument("--limit", type=int, default=20)
+    lhb.set_defaults(func=cmd_lhb)
 
     return parser
 
